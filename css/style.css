@@ -1,0 +1,23 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font: 13px 'Segoe UI','DejaVu Sans',Helvetica,'Trebuchet MS',Arial,sans-serif; }
+body { background: #222; }
+
+.full { position: absolute; top:0;left:0;right:0;bottom:0; }
+.hidden { display: none }
+
+#W { overflow: hidden; }
+#xmap { position: relative; }
+
+#mini-map { position: absolute; right: 10px; top: 10px; width: 120px; border: 1px solid #ddd; display: none; overflow: hidden }
+#mini-window { position: absolute; box-shadow: 0 0 0px 1px rgba(200,0,0,0.4); background: rgba(255,0,0,0.05); }
+
+#xsleep { background: rgba(0,0,0,0.5); z-index: 50; padding: 200px 0; text-align: center; color: #eee; }
+#effects { position: absolute; left: 0; top: 0; z-index: 50 }
+
+.tower { 
+	position: absolute; z-index: 20; 
+	width: 64px; height: 22px; 
+	margin-left: -32px; margin-top: -11px;
+	background-size: 64px 22px;
+}
+.sprite { position: absolute; z-index: 30;  }

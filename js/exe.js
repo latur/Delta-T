@@ -39,10 +39,6 @@ var render = Matter.Render.create({
 engine.world.gravity.x = 0;
 engine.world.gravity.y = 0;
 
-
-
-
-
 var unit_create = function(x, y, model){
 	var m = unit_models[model] || unit_models['white'];
 	var box = Bodies.rectangle(x, y, 40, 24, { render: { sprite: { texture: m.body, xScale: 0.5, yScale: 0.5 } } });
@@ -70,10 +66,10 @@ var unit_create = function(x, y, model){
 // -------------------------------------------------------------------------- //
 
 var socket = io.connect(location.origin + ':8913');
-var unit = unit_create(-20, -20);
+var unit = unit_create(300, 300);
 
-
-var players = {};
+var owners = {};
+// !
 var uid = false;
 var fire = {'main' : 0, 'mini' : 0};
 
@@ -87,16 +83,16 @@ World.add(engine.world, [
 
 // Карта
 World.add(engine.world, [
-	Bodies.rectangle(20, 50, 280, 20, { isStatic: true }),
-	Bodies.rectangle(120, 150, 280, 20, { isStatic: true }),
-	Bodies.rectangle(320, 250, 280, 20, { isStatic: true }),
-	Bodies.rectangle(400, 200, 80, 80, { isStatic: true }),
-	Bodies.rectangle(420, 450, 980, 20, { isStatic: true }),
-	Bodies.rectangle(420, 550, 1080, 20, { isStatic: true }),
-	Bodies.rectangle(1200, 400, 80, 80, { isStatic: true }),
-	Bodies.rectangle(1450, 820, 980, 20, { isStatic: true }),
-	Bodies.rectangle(1550, 120, 300, 40, { isStatic: true }),
-	Bodies.rectangle(1550, 180, 300, 40, { isStatic: true })
+	Bodies.rectangle(20,   50,  280,  20, { isStatic: true }),
+	Bodies.rectangle(120,  150, 280,  20, { isStatic: true }),
+	Bodies.rectangle(320,  250, 280,  20, { isStatic: true }),
+	Bodies.rectangle(400,  200, 80,   80, { isStatic: true }),
+	Bodies.rectangle(420,  450, 980,  20, { isStatic: true }),
+	Bodies.rectangle(420,  550, 1080, 20, { isStatic: true }),
+	Bodies.rectangle(1200, 400, 80,   80, { isStatic: true }),
+	Bodies.rectangle(1450, 820, 980,  20, { isStatic: true }),
+	Bodies.rectangle(1550, 120, 300,  40, { isStatic: true }),
+	Bodies.rectangle(1550, 180, 300,  40, { isStatic: true })
 ]);
 
 var w_offsets = { left : 0, top : 0};
@@ -143,38 +139,45 @@ var make_shot = function(){
 };
 
 socket.on('echo', function (timer) {
+	console.log(timer);
 	socket.emit('echo', timer);
-});
-socket.on('init', function (id) {
-	uid = id;
 });
 
 // Прилетела информация про одного пользователя
 socket.on('user', function (cns) {
-	var x = cns.split(':');
+	var x = cns.split(':').map(function(n){ return parseInt(n); });
+	var cn = x[0];
+	if (!owners[cn]) {
+		owners[cn] = unit_create(x[1], x[2], 'black');
+		Matter.Body.setStatic(owners[cn].box, true);
+	}
+	Matter.Body.setPosition(owners[cn].box, {x : x[1], y : x[2]});
+	Matter.Body.setAngle(owners[cn].box, x[3] * Math.PI / 180);
+	owners[cn].tower.angle = x[4];
+	
 	console.log(x);
 	return ;
 
-	// Новые пользователи
-	for (var id in data) {
-		if (players[id] || uid == id) continue ;
-		players[id] = unit_create(data[id].x, data[id].y, 'other');
-		players[id].offset = data[id].r;
-		players[id].k = data[id].k;
-	}
-	// Текущие полльзователи:
-	for (var id in players) {
-		if (!data[id]) {
-			players[id].remove();
-			delete players[id];
-			continue;
-		}
-		if (dist(players[id].box.position, data[id]) > 6) {
-			Matter.Body.setPosition(players[id].box, data[id]);
-		}
-		Matter.Body.setAngle(players[id].box, data[id].r);
-		players[id].tower.setAngle(data[id].t);
-	}
+	//// Новые пользователи
+	//for (var id in data) {
+	//	if (players[id] || uid == id) continue ;
+	//	players[id] = unit_create(data[id].x, data[id].y, 'other');
+	//	players[id].offset =  data[id].r;
+	//	players[id].k = data[id].k;
+	//}
+	//// Текущие полльзователи:
+	//for (var id in players) {
+	//	if (!data[id]) {
+	//		players[id].remove();
+	//		delete players[id];
+	//		continue;
+	//	}
+	//	if (dist(players[id].box.position, data[id]) > 6) {
+	//		Matter.Body.setPosition(players[id].box, data[id]);
+	//	}
+	//	Matter.Body.setAngle(players[id].box, data[id].r);
+	//	players[id].tower.setAngle(data[id].t);
+	//}
 });
 
 Events.on(render, 'afterRender', function() {
@@ -206,8 +209,15 @@ Events.on(render, 'afterRender', function() {
 	// - Выстрел
 	if (keys[32] && fire.main == 0) {
 		make_shot();
-		fire.main = 1;
+		fire.main = 0;
 	}
+	
+	// Рендерим башни наших коллег-соперников ;)
+	for (var cn in owners) {
+		owners[cn].tower.setPoint(owners[cn].box.position);
+		owners[cn].tower.setAngle(owners[cn].tower.angle);
+	}
+	
 	w_upadate();
 });
 
@@ -236,6 +246,7 @@ setInterval(function(){
 	nx.push(keys[37] || keys[65] ? 1 : 0);
 	nx.push(keys[40] || keys[83] ? 1 : 0);
 	nx.push(keys[38] || keys[87] ? 1 : 0);
+
 	// Зачем такие извращенства? Экономим на байтах, передаваемых на сервер
 	// Информация о юните в строке занимает меньше памяти чем в json-е ;)
 	socket.emit('me', nx.join(':'));
@@ -249,7 +260,14 @@ setInterval(function(){
 		return unit.dead -= 1;
 	}
 	sleep.innerHTML = 'Нажмите пробел для перерождения';
-}, 100);
+}, 200);
+
+// Отрисовка клиентов
+setInterval(function(){
+
+}, 30);
+
+
 
 Matter.Engine.run(engine);
 Matter.Render.run(render);

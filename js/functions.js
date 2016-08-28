@@ -2,7 +2,7 @@
 function find_collision_end(A, B, bodies, iteration){
 	if (iteration > 10) return B;
 	var mean = {x : (A.x + B.x)/2, y : (A.y + B.y)/2};
-	var C = Query.ray(bodies, A, mean);
+	var C = Matter.Query.ray(bodies, A, mean);
 	if (C.length == 0) A = mean; else B = mean;
 	return find_collision_end(A, B, bodies, iteration + 1);
 }

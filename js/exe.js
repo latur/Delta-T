@@ -2,11 +2,6 @@
 
 var World = Matter.World;
 
-var Bodies = Matter.Bodies,
-    Query = Matter.Query,
-    Composite = Matter.Composite,
-    Events = Matter.Events;
-
 var keys = [];
 var sleep = document.getElementById('xsleep');
 var xmap  = document.getElementById('xmap');
@@ -39,19 +34,20 @@ var render = Matter.Render.create({
 engine.world.gravity.x = 0;
 engine.world.gravity.y = 0;
 
-var unit_create = function(x, y, model){
+var unit_create = function(x, y, model, is_static){
 	var m = unit_models[model] || unit_models['white'];
-	var box = Bodies.rectangle(x, y, 40, 24, { render: { sprite: { texture: m.body, xScale: 0.5, yScale: 0.5 } } });
+	var sprite = { texture: m.body, xScale: 0.5, yScale: 0.5 };
+	var box = Matter.Bodies.rectangle(x, y, 40, 24, { render: { sprite: sprite } });
+
+	var is_static = is_static || false;
+	if (is_static) Matter.Body.setStatic(box, true);
+
 	World.add(engine.world, [ box ]);
 
-	var e = $('<div class="tower" style="background-image: url('+m.tower+')"></div>').css({ top: y, left : x});
-	var tower = { 'angle' : 0, 'element' : e.appendTo('#xmap') };
-
-	var remove = function(){
-		World.remove(engine.world, [ box ]);
-		tower.element.remove();
+	var tower = {
+		angle   : 0,
+		element : $('<div class="tower" style="background-image: url('+m.tower+')"></div>').css({ top: y, left : x}).appendTo('#xmap')
 	};
-	
 	tower.setAngle = function(e){ 
 		tower.angle = e % 360;
 		tower.element.css({ transform: 'rotate(' + (tower.angle + box.angle * 180 / Math.PI) + 'deg)'});
@@ -59,8 +55,25 @@ var unit_create = function(x, y, model){
 	tower.setPoint = function(position){
 		tower.element.css({ top: position.y, left : position.x });
 	};
-
-	return { 'box' : box, 'tower': tower, 'speed' : [0,0], 'dead' : 5, k: [], 'remove' : remove }
+	var remove = function(){
+		World.remove(engine.world, [ box ]);
+		tower.element.remove();
+	};
+	var set = function(x){
+		tower.setAngle(x[3]);
+		Matter.Body.setPosition(box, {x : x[0], y : x[1]});
+		Matter.Body.setAngle(box, x[2] * Math.PI / 180);
+	};
+	
+	return {
+		box    : box, 
+		set    : set,
+		tower  : tower, 
+		speed  : [0, 0], 
+		dead   : 5, 
+		remove : remove,
+		state  : [],
+	}
 };
 
 // -------------------------------------------------------------------------- //
@@ -75,24 +88,24 @@ var fire = {'main' : 0, 'mini' : 0};
 
 // Стеночки
 World.add(engine.world, [
-	Bodies.rectangle(map.size[0]/2, 5,               map.size[0], 10, { isStatic: true }),
-	Bodies.rectangle(map.size[0]/2, map.size[1] - 5, map.size[0], 10, { isStatic: true }),
-	Bodies.rectangle(5,               map.size[1]/2, 10, map.size[1], { isStatic: true }),
-	Bodies.rectangle(map.size[0] - 5, map.size[1]/2, 10, map.size[1], { isStatic: true })
+	Matter.Bodies.rectangle(map.size[0]/2, 5,               map.size[0], 10, { isStatic: true }),
+	Matter.Bodies.rectangle(map.size[0]/2, map.size[1] - 5, map.size[0], 10, { isStatic: true }),
+	Matter.Bodies.rectangle(5,               map.size[1]/2, 10, map.size[1], { isStatic: true }),
+	Matter.Bodies.rectangle(map.size[0] - 5, map.size[1]/2, 10, map.size[1], { isStatic: true })
 ]);
 
 // Карта
 World.add(engine.world, [
-	Bodies.rectangle(20,   50,  280,  20, { isStatic: true }),
-	Bodies.rectangle(120,  150, 280,  20, { isStatic: true }),
-	Bodies.rectangle(320,  250, 280,  20, { isStatic: true }),
-	Bodies.rectangle(400,  200, 80,   80, { isStatic: true }),
-	Bodies.rectangle(420,  450, 980,  20, { isStatic: true }),
-	Bodies.rectangle(420,  550, 1080, 20, { isStatic: true }),
-	Bodies.rectangle(1200, 400, 80,   80, { isStatic: true }),
-	Bodies.rectangle(1450, 820, 980,  20, { isStatic: true }),
-	Bodies.rectangle(1550, 120, 300,  40, { isStatic: true }),
-	Bodies.rectangle(1550, 180, 300,  40, { isStatic: true })
+	Matter.Bodies.rectangle(20,   50,  280,  20, { isStatic: true }),
+	Matter.Bodies.rectangle(120,  150, 280,  20, { isStatic: true }),
+	Matter.Bodies.rectangle(320,  250, 280,  20, { isStatic: true }),
+	Matter.Bodies.rectangle(400,  200, 80,   80, { isStatic: true }),
+	Matter.Bodies.rectangle(420,  450, 980,  20, { isStatic: true }),
+	Matter.Bodies.rectangle(420,  550, 1080, 20, { isStatic: true }),
+	Matter.Bodies.rectangle(1200, 400, 80,   80, { isStatic: true }),
+	Matter.Bodies.rectangle(1450, 820, 980,  20, { isStatic: true }),
+	Matter.Bodies.rectangle(1550, 120, 300,  40, { isStatic: true }),
+	Matter.Bodies.rectangle(1550, 180, 300,  40, { isStatic: true })
 ]);
 
 var w_offsets = { left : 0, top : 0};
@@ -129,7 +142,7 @@ var draw_shot = function(from, to){
 	
 };
 var make_shot = function(){
-	var bodies = Composite.allBodies(engine.world).slice(1);
+	var bodies = Matter.Composite.allBodies(engine.world).slice(1);
 	var from = unit.box.position; 
 	var to = find_collision_end(from, {
 		x : from.x + map.size[0] * Math.cos(unit.tower.angle * Math.PI / 180 + unit.box.angle),
@@ -139,48 +152,26 @@ var make_shot = function(){
 };
 
 socket.on('echo', function (timer) {
-	console.log(timer);
 	socket.emit('echo', timer);
 });
 
 // Прилетела информация про одного пользователя
 socket.on('user', function (cns) {
-	var x = cns.split(':').map(function(n){ return parseInt(n); });
-	var cn = x[0];
-	if (!owners[cn]) {
-		owners[cn] = unit_create(x[1], x[2], 'black');
-		Matter.Body.setStatic(owners[cn].box, true);
-	}
-	Matter.Body.setPosition(owners[cn].box, {x : x[1], y : x[2]});
-	Matter.Body.setAngle(owners[cn].box, x[3] * Math.PI / 180);
-	owners[cn].tower.angle = x[4];
-	
-	console.log(x);
-	return ;
-
-	//// Новые пользователи
-	//for (var id in data) {
-	//	if (players[id] || uid == id) continue ;
-	//	players[id] = unit_create(data[id].x, data[id].y, 'other');
-	//	players[id].offset =  data[id].r;
-	//	players[id].k = data[id].k;
-	//}
-	//// Текущие полльзователи:
-	//for (var id in players) {
-	//	if (!data[id]) {
-	//		players[id].remove();
-	//		delete players[id];
-	//		continue;
-	//	}
-	//	if (dist(players[id].box.position, data[id]) > 6) {
-	//		Matter.Body.setPosition(players[id].box, data[id]);
-	//	}
-	//	Matter.Body.setAngle(players[id].box, data[id].r);
-	//	players[id].tower.setAngle(data[id].t);
-	//}
+	var cns = cns.split(':');
+	var cn  = cns[0];
+	// Если видим впервые, создаём юнита на карте
+	if (!owners[cn]) owners[cn] = unit_create(-999, -999, 'black', 'static');
+	// Закидываем очередь состояний:
+	owners[cn].coda = cns[1].split('!').map(function(pix){
+		var xy = pix.split(',');
+		return [parseInt(xy[0]), parseInt(xy[1]), parseInt(xy[2]), parseInt(xy[3])];
+	});
+	// Обновляем позицию из очереди
+	owners[cn].set(owners[cn].coda[0]);
+	owners[cn].coda = owners[cn].coda.splice(1);
 });
 
-Events.on(render, 'afterRender', function() {
+Matter.Events.on(render, 'afterRender', function() {
 	// - Сброс скорости
 	unit.speed = [unit.speed[0] * 0.9, unit.speed[1] * 0.9];
 
@@ -203,6 +194,7 @@ Events.on(render, 'afterRender', function() {
 	// - Поворот башни
 	if (keys[81]) unit.tower.angle -= 2;
 	if (keys[69]) unit.tower.angle += 2;
+
 	unit.tower.setPoint(unit.box.position);
 	unit.tower.setAngle(unit.tower.angle);
 
@@ -212,8 +204,19 @@ Events.on(render, 'afterRender', function() {
 		fire.main = 0;
 	}
 	
+	var nx = [parseInt(unit.box.position.x), parseInt(unit.box.position.y)];
+	// Угол корпуса 3
+	nx.push(parseInt(((unit.box.angle * 180 / Math.PI) % 360 + 360) % 360));
+	// Угол башни 4
+	nx.push(parseInt(((unit.tower.angle) % 360 + 360) % 360));
+	// В стрек
+	unit.state.push(nx.join(','));
+
 	// Рендерим башни наших коллег-соперников ;)
 	for (var cn in owners) {
+		if (owners[cn].coda.length == 0) continue ;
+		owners[cn].set(owners[cn].coda[0]);
+		owners[cn].coda = owners[cn].coda.splice(1);
 		owners[cn].tower.setPoint(owners[cn].box.position);
 		owners[cn].tower.setAngle(owners[cn].tower.angle);
 	}
@@ -235,17 +238,24 @@ window.onkeypress = function(e) {
 
 // -------------------------------------------------------------------------- //
 setInterval(function(){
-	// Отправка состояний
+	socket.emit('me', unit.state.join('!'));
+	unit.state = [];
+	return ;
+
+	// Отправка состояний 1 2
 	var nx = [parseInt(unit.box.position.x), parseInt(unit.box.position.y)];
-	// Угол корпуса
+	// Угол корпуса 3
 	nx.push(parseInt(((unit.box.angle * 180 / Math.PI) % 360 + 360) % 360));
-	// Угол башни
+	// Угол башни 4
 	nx.push(parseInt(((unit.tower.angle) % 360 + 360) % 360));
-	// Клавиши
-	nx.push(keys[39] || keys[68] ? 1 : 0);
-	nx.push(keys[37] || keys[65] ? 1 : 0);
-	nx.push(keys[40] || keys[83] ? 1 : 0);
+	// Скорость 5 6
+	nx.push(Math.round(unit.speed[0] * 1000));
+	nx.push(Math.round(unit.speed[1] * 1000));
+	// Клавиши 7 8 9 10
 	nx.push(keys[38] || keys[87] ? 1 : 0);
+	nx.push(keys[40] || keys[83] ? 1 : 0);
+	nx.push(keys[37] || keys[65] ? 1 : 0);
+	nx.push(keys[39] || keys[68] ? 1 : 0);
 
 	// Зачем такие извращенства? Экономим на байтах, передаваемых на сервер
 	// Информация о юните в строке занимает меньше памяти чем в json-е ;)
@@ -260,12 +270,8 @@ setInterval(function(){
 		return unit.dead -= 1;
 	}
 	sleep.innerHTML = 'Нажмите пробел для перерождения';
-}, 200);
+}, 400);
 
-// Отрисовка клиентов
-setInterval(function(){
-
-}, 30);
 
 
 

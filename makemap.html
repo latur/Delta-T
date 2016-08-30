@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Ћx : Make Map</title>
+	<link href="css/makemap.css" rel="stylesheet">
+	<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+	
+	
+</head>
+<body>
+<script src="http://code.jquery.com/jquery-1.11.3.js"></script>
+<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<script src="js/jquery.ui.rotatable.js"></script>
+<button id="add">Create Box</button> <button id="addc">Create Circle</button>
+ 
+<div id="mapmaker"></div>
+<pre id="code"></pre>
+
+<script>
+$(document).ready(function() {
+	function GetObjects(){
+		var rects = [], circles = [];
+		$('.m-box').each(function(){
+			var e = $(this);
+			var a = parseFloat($(this).data('angle'));
+			var item = [parseInt(e.css('left')), parseInt(e.css('top'))];
+			item.push(parseInt(e.css('width')));
+			item.push(parseInt(e.css('height')));
+			item.push(isNaN(a) ? 0 : a);
+			item[0] = parseInt(item[0] + item[2]/2);
+			item[1] = parseInt(item[1] + item[3]/2);
+			if (e.hasClass('box')) rects.push('\t[' + item.join(', ') + ']');
+			if (e.hasClass('circle')) {
+				item[2] = item[2]/2;
+				circles.push('\t[' + item.slice(0, 3).join(', ') + ']');
+			}
+		});
+		
+		var code = "'rects' : [\n" + rects.join(',\n') + "\n],\n";
+		code += "'circles' : [\n" + circles.join(',\n') + "\n]\n"
+		$('#code').html(code);
+	}
+
+	function Create(tp){
+		var start = function(event, ui) {
+			$('.m-box').css({zIndex : 10});
+        	if (ui.element) ui.element.css({zIndex : 20});
+        	if (event.target) $(event.target).css({zIndex : 20});
+        };
+		var size = {
+			width  : rand(100, 300), 
+			height : rand(50 , 100), 
+		};
+		var mbox = $('<div class="m-box '+tp+'"><div class="m-remove">X</div></div>')
+			.css({ left: rand(100, 500), top: rand(100, 500), zIndex : 30 + $('.m-box').length})
+			.appendTo('#mapmaker');
+		
+	    mbox.draggable({
+		    start : start,
+		    stop : GetObjects
+	    }).find('.m-remove').click(function(){
+			$(this).parent().remove();
+		});
+	    
+		if (tp == 'box') {
+	    	mbox.resizable({
+			    start : start,
+			    stop : GetObjects
+	    	}).rotatable({
+	    	    start : start,
+			    stop : GetObjects,
+	    	    rotationCenterX: 50.0, 
+	    	    rotationCenterY: 50.0,
+			    rotate : function(e,u){
+				    console.log(u.angle)
+				    u.element.data('angle', u.angle.current)
+			    }
+	    	}).css(size);
+		} else {
+	    	mbox.resizable({
+			    start : start,
+			    stop : GetObjects,
+			    aspectRatio: 1
+	    	}).css({
+		    	width : size.width,
+		    	height : size.width
+	    	});
+		}
+
+		GetObjects();
+	}
+	
+	$('#add').click(function(){ Create('box'); });
+	$('#addc').click(function(){ Create('circle'); });
+	
+    Create('box');
+});
+
+function rand(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+body {
+	background: #222;
+	margin: 10px;
+	padding: 0;
+}
+button {
+	margin: 10px 0;
+}
+#mapmaker {
+	width: 1600px;
+	height: 900px;
+	width: 1590px;
+	height: 890px;
+	border: 5px solid #f66;
+	background: #fff url(../img/grid.gif);
+	position: relative;
+}
+#code {
+	width: 500px;
+	padding: 10px;
+	font-family: monospace;
+	background: #eee;
+}
+.ui-rotatable-handle {
+	border-radius: 3px;
+    height: 16px;
+    width:  16px;
+    cursor: pointer;
+    background: #000;
+	position: absolute;
+    left: 2px;
+    top: 2px;
+}
+.m-box {
+	text-align: center;
+	color: #fff;
+	font-family: monospace;
+	position: absolute !important;
+	left: 30px;
+	top:30px;
+	background: #f66; 
+	border: 1px solid #444;
+}
+.m-box.circle {
+	border-radius: 50%;
+}
+.m-remove {
+	border-radius: 3px;
+	position: absolute;
+    height: 16px;
+    width:  16px;
+    cursor: pointer;
+    background: #F00;
+    right: 2px;
+    top: 2px;
+}
+
+.m-box.circle .m-remove {
+	margin-right: -8px;
+	margin-top: -8px;
+	right: 50%;
+	top: 50%;
+}

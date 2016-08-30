@@ -1,3 +1,5 @@
+"use strict";
+
 // Поиск точки первой коллизии (пересечение луча и любого объекта)
 function find_collision_end(A, B, bodies, iteration){
 	if (iteration > 10) return B;
@@ -14,11 +16,11 @@ function dist(A, B){
 }
 
 // Спрайт взоывов:
-function exp64(point){
-	var file   = './img/exp.64.png';
-	var size   = 64;
-	var steps  = 40;
+var e_fire = ['./img/explosion_fire.png', 64, 40];
+var e_tank = ['./img/explosion_tank.png', 128, 48];
 
+function Explode(e, point){
+	var file = e[0], size = e[1], steps = e[2];
 	var sprite = $('<div class="sprite" />')
 		.css({ left : point.x - size/2, top : point.y - size/2 })
 		.css({ width : size, height : size, backgroundImage : 'url('+file+')' })
@@ -71,8 +73,8 @@ function window_calc(pos, side, win, frame, prop){
 }
 
 function log(msg){
-	console.log('LOG: ');
-	console.log(msg);
+	var m = $('<p>').html(msg).appendTo('#screen');
+	console.log('LOG: ' + msg);
 }
 
 var unit_models = {
@@ -88,37 +90,61 @@ var unit_models = {
 
 var map_info = {
 	'size'   : [1600, 900],
-	'ground' : './maps/ground.jpg',
-	'top'    : './maps/top.png',
+	'ground' : './img/map.BG.jpg',
+	'top'    : './img/map.top.png',
+	'spawn'  : [
+			{x: 259, y: 610},
+			{x: 445, y: 720},
+			{x: 812, y: 788},
+			{x: 958, y: 625},
+			{x: 958, y: 625}
+		],
 	'rects'  : [
-		[20,   50,  280,  20],
-		[120,  150, 280,  20],
-		[320,  250, 280,  20],
-		[400,  200, 80,   80],
-		[420,  450, 980,  20],
-		[420,  550, 1080, 20],
-		[1200, 400, 80,   80],
-		[1450, 820, 980,  20],
-		[1550, 120, 300,  40],
-		[1550, 180, 300,  40]
+		[1078, 119, 318, 38, -6.284624147518159],
+		[1204, 699, 258, 36, 0],
+		[436, 115, 635, 37, 0.0033199516810196172],
+		[210, 362, 124, 337, 0.17707124272724117],
+		[979, 85, 38, 48, 0],
+		[1398, 187, 213, 36, 0.7810119556578599],
+		[1396, 624, 217, 37, 2.343729070293972],
+		[859, 192, 217, 36, 5.45286370728862],
+		[861, 622, 217, 37, 0.8442934156353976],
+		[793, 289, 41, 57, 0],
+		[796, 499, 40, 108, 0],
+		[1317, 119, 38, 38, 0],
+		[1470, 304, 35, 106, 0],
+		[1469, 513, 34, 97, 0],
+		[956, 698, 70, 37, 0],
+		[1238, 410, 111, 206, 0],
+		[252, 711, 310, 125, 0.16873532689381232],
+		[633, 724, 279, 118, 0.14008025346416453],
+		[1057, 798, 195, 35, 0],
+		[337, 648, 82, 68, 0.18237975349130164],
+		[159, 310, 155, 68, 0.18943913481459473]
+	],
+	'circles' : [
+		[982, 287, 60.5],
+		[1239, 509, 56]
 	]
 }
 
 // Стеночки
-map_info.rects.push([map_info.size[0]/2, 5,                        map_info.size[0], 10]);
-map_info.rects.push([map_info.size[0]/2,   map_info.size[1] - 5,   map_info.size[0], 10]);
-map_info.rects.push([5,                    map_info.size[1]/2, 10, map_info.size[1]]);
-map_info.rects.push([map_info.size[0] - 5, map_info.size[1]/2, 10, map_info.size[1]]);
+map_info.rects.push([map_info.size[0]/2, 3,                        map_info.size[0], 5, 0]);
+map_info.rects.push([map_info.size[0]/2,   map_info.size[1] - 3,   map_info.size[0], 5, 0]);
+map_info.rects.push([3,                    map_info.size[1]/2, 5, map_info.size[1], 0]);
+map_info.rects.push([map_info.size[0] - 3, map_info.size[1]/2, 5, map_info.size[1], 0]);
 
 // Отрисорвка мини-карты
-var minimapHeight = 120 * map_info.size[1] / map_info.size[0];
 var w_offsets = { left : 0, top : 0};
-$('#mini-map').css({ height : minimapHeight, display : 'none' });
-$('#xmap').css({ width : map_info.size[0], height : map_info.size[1] })
+$('#xmap').css({
+	width  : map_info.size[0], 
+	height : map_info.size[1]
+});
 
-
-
-
-
-
-
+log('Загрузка карты');
+$('<img class="full ground">')
+	.attr('src', map_info.ground).appendTo('#xmap')[0]
+	.onload = function(){ log('Карта загружена'); }
+$('<img class="full top">')
+	.attr('src', map_info.top).appendTo('#xmap')[0]
+	.onload = function(){ log('Местность загружена'); }

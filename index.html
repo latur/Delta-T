@@ -7,13 +7,23 @@
 	<title>Ћx</title>
 	<link href="css/style.css" rel="stylesheet">
 </head>
-<body>
-<div id="W" class="full">
-	<div id="xmap"></div>
-	<div id="mini-map">
-		<div id="mini-window"></div>
+<body class="full">
+	<div id="notes">
+		<div class="l1">
+			<div class="key">Q<div class="note l">Вращение<br>башней налево&nbsp;&nbsp;&nbsp;</div></div>
+			<div class="key">W<div class="note c">Движение<br>вперёд</div></div>
+			<div class="key">E<div class="note r">Вращение<br>&nbsp;&nbsp;&nbsp;башней направо</div></div>
+		</div>
+		<div class="l2">
+			<div class="key">A<div class="note l">Поворот<br>налево&nbsp;&nbsp;&nbsp;</div></div>
+			<div class="key">S<div class="note c b">Движение<br>назад</div></div>
+			<div class="key">D<div class="note r">Поворот<br>&nbsp;&nbsp;&nbsp;направо</div></div>
+		</div>
+		<div class="key space">Sapce<div class="note c b">Огонь</div></div>
 	</div>
-</div>
+	<div id="screen" class="full"></div>
+	<div id="xmap"></div>
+</body>
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
 <script src="js/matter.js" type="text/javascript"></script>

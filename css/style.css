@@ -49,9 +49,11 @@ canvas {
 	line-height: 30px;
 	margin: 0 5px 5px 0;
 	float: left;
+    box-shadow: 0 2px 3px #000;
 	overflow: visible;
 }
 .key .note {
+	text-shadow: 0 1px 2px #000;
 	line-height: 14px;
 	color: #fff;
 	position: absolute;
@@ -115,14 +117,27 @@ canvas {
 	margin-bottom: 40px;
 }
 
+#scores {
+	z-index: 280;
+	background: rgba(0,0,0,0.8);
+}
+#scores.hidden {
+	opacity: 0;
+}
 
 #screen {
 	z-index: 300;
-    color: #fff;
+    color: #eee;
     font-weight: 100;
     padding: 15px;
     line-height: 18px;
 	text-shadow: 0 1px 3px #000;
+}
+.pre {
+	color: #a2ff90;
+}
+.red {
+	color: #f00;
 }
 #xmap {
 	opacity: 0;

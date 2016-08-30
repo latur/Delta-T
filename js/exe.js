@@ -20,7 +20,7 @@ function dist(a, b){
 	return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 }
 
-function explode(e, point){
+function sprite(e, point){
 	var file = e[0], size = e[1], steps = e[2];
 	var sprite = $('<div class="sprite" />')
 		.css({ left : point.x - size/2, top : point.y - size/2 })
@@ -57,7 +57,7 @@ function line(from, to){
 }
 
 // -------------------------------------------------------------------------- //
-var keys = [];
+var keys = [], ready = 0;
 var log = function(msg, c){
 	var m = $('<p>').addClass(c).html(msg).appendTo('#screen');
 	if ($('#screen p').length > 10) $('#screen p:first').remove();
@@ -109,6 +109,7 @@ var map = (function(cfg, e){
 		$('<img class="full ground">').attr('src', cfg.ground).appendTo(e);
 		$('<img class="full top">').attr('src', cfg.top).appendTo(e);
 		log('Карта загружена');
+		ready++;
 	});
 
 	// Поиск точки первой коллизии 
@@ -170,6 +171,7 @@ var units = (function(cfg, e){
 	// Медиаконтент: Спрайты взрывов
 	loader([cfg.sprite.fire[0], cfg.sprite.dead[0]], function(){
 		log('Модели загружены');
+		ready++;
 	});
 	
 	// Пинг
@@ -179,6 +181,7 @@ var units = (function(cfg, e){
 		cn = e[0];
 		log("Соединение с сервером установлено");
 		log("Добро пожаловать, игрок: #" + e[0]);
+		ready++;
 	}
 
 	// Игрок покинул поле боя
@@ -191,7 +194,7 @@ var units = (function(cfg, e){
 	// Отриосовка линии и взрыва
 	function draw_shot(from, to){
 		e.append(line(from, to));
-		e.append(explode(cfg.sprite.fire, to));
+		e.append(sprite(cfg.sprite.fire, to));
 	}
 
 	// Рассчёт и отправка взрыва
@@ -299,7 +302,7 @@ var units = (function(cfg, e){
 			Matter.Body.setAngle(box, x[2] * Math.PI / 180);
 		};
 		var kill = function(){
-			e.append(explode(cfg.sprite.dead, box.position));
+			e.append(sprite(cfg.sprite.dead, box.position));
 			setTimeout(function(){
 				set([-999, -999, 0, 0]);
 			}, 200);
@@ -371,7 +374,7 @@ var units = (function(cfg, e){
 	// Пробел: переродиться
 	function spawn(){
 		if (dead !== 0 || !cn) return ;
-		dead = false, me.state = [], keys[e.which] = undefined;
+		dead = false, me.state = [], keys[32] = undefined;
 
 		Matter.Body.setPosition(me.box, map.respawn_point(owners));
 		Matter.Body.setAngle(me.box, -80 * Math.PI / 180);
@@ -429,7 +432,11 @@ Matter.Render.run(render);
 window.onkeydown = function(e){ keys[e.which] = true; };
 window.onkeyup = function(e){ keys[e.which] = undefined; };
 window.onkeypress = function(e) {
-	if (e.which == 32) units.spawn();
+	if (e.which == 32 && ready >= 3) units.spawn();
 }
 
-log('Для начала игры нажмите пробел', 'red');
+var loading = setInterval(function(){
+	if (ready < 3) return ;
+	clearInterval(loading);
+	log('Для начала игры нажмите пробел', 'red');
+}, 10);

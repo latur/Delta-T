@@ -583,9 +583,9 @@ window.onkeyup = function(e){
 	keys[e.which] = undefined;
 };
 window.onkeypress = function(e) {
-	//console.log(e.which);
 	if (e.which == 32 && ready >= 3) game.spawn();
 	if (e.which) e.preventDefault();
+	if (e.which == 112) $('#scores').toggleClass('hidden visible');
 	return false;
 }
 

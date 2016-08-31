@@ -58,9 +58,9 @@ function line(from, to){
 
 // -------------------------------------------------------------------------- //
 var keys = [], ready = 0;
-var log = function(msg, c){
-	var m = $('<p>').addClass(c).html(msg).appendTo('#screen');
-	if ($('#screen p').length > 10) $('#screen p:first').remove();
+var log = function(msg){
+	var m = $('<p>').html(msg).appendTo('#screen');
+	if ($('#screen p').length > 20) $('#screen p:first').remove();
 	setTimeout(function(){ m.remove(); }, 15000);
 };
 var loader = function(media, callback){
@@ -177,10 +177,20 @@ var units = (function(cfg, e){
 	// Пинг
 	function echo(e){
 		socket.emit('echo', true);
-		if (cn != 0) return (players = e[1] || {});
+		if (cn != 0) {
+			players = e[1] || {};
+			var table = '';
+			for (var id in players) {
+				console.log(players[id]);
+				table += '<tr><td>';
+				table += ['#' + id, players[id].deads, players[id].kills, players[id].ip, players[id].ping].join('</td><td>');
+				table += '</td></tr>';
+			}
+			$('#scores tbody').html(table);
+			return ;
+		}
 		cn = e[0];
-		log("Соединение с сервером установлено");
-		log("Добро пожаловать, игрок: #" + e[0]);
+		log("Соединение с сервером установлено, id: #" + e[0]);
 		ready++;
 	}
 
@@ -223,13 +233,15 @@ var units = (function(cfg, e){
 				owners[i].kill();
 				if (!dead_unit) dead_unit = owners[i].position;
 				// Это я так
+				if (i == by) return log('Игрок <b>#' + i + '</b> подорвал себя');
 				by = by == cn ? 'вами' : ('игроком <b>#' + by + '</b>');
 				return log('Игрок <b>#' + i + '</b> убит ' + by);
 			}
 			// Я убит
 			me.kill();
-			dead = 5 * 5;
+			dead = 5 * 5, me.speed = [0, 0];
 			dead_unit = me.box.position;
+			$('#scores').removeClass('hidden')
 			if (by == cn) {
 				log('Вы подорвали себя. Не стоит стрелять в упор');
 			} else {
@@ -302,6 +314,16 @@ var units = (function(cfg, e){
 			Matter.Body.setAngle(box, x[2] * Math.PI / 180);
 		};
 		var kill = function(){
+			var dp = $('<div class="dead-place" />')
+				.css({ left: box.position.x, top : box.position.y })
+				.css({ transform: 'rotate(' + parseInt(Math.random() * 350) + 'deg)' })
+				.appendTo(e);
+			var t = 1;
+			var i = setInterval(function(){
+				t -= 0.01, dp.css({ opacity : t });
+				if (t <= 0) clearInterval(i), dp.remove();
+			}, 800);
+
 			e.append(sprite(cfg.sprite.dead, box.position));
 			setTimeout(function(){
 				set([-999, -999, 0, 0]);
@@ -368,18 +390,21 @@ var units = (function(cfg, e){
 		me.state.push(nx.join(','));
 
 		// Отрисовка карты и миникарты
-		map.position(me.box.position)
+		map.position(me.box.position);
 	}
 
 	// Пробел: переродиться
 	function spawn(){
 		if (dead !== 0 || !cn) return ;
 		dead = false, me.state = [], keys[32] = undefined;
+		var place = map.respawn_point(owners);
 
-		Matter.Body.setPosition(me.box, map.respawn_point(owners));
+		Matter.Body.setPosition(me.box, place);
 		Matter.Body.setAngle(me.box, -80 * Math.PI / 180);
+		keys = [];
 
 		$('#scores').addClass('hidden');
+		$('<div class="you-are-here" />').css({ left: place.x, top: place.y }).appendTo(e)
 		e.animate({ opacity : 1 }, 700);
 	}
 
@@ -404,7 +429,11 @@ var units = (function(cfg, e){
 		// Возможность перерождения. Таймер:
 		if (dead > 0) dead -= 1;
 		// false = я живой
-		if (dead !== false) return ;
+		if (dead !== false) {
+			if (dead % 5 == 1) log('Ожидайте: ' + (dead-1)/5);
+			if (dead == 1) log('<strong>Для восстановления нажмите пробел</strong>');
+			return ;
+		}
 		// Сообщаем о себе
 		socket.emit('me', me.state.join('!'));
 		me.state = [];
@@ -429,8 +458,13 @@ Matter.Engine.run(engine);
 Matter.Render.run(render);
 
 // -------------------------------------------------------------------------- //
-window.onkeydown = function(e){ keys[e.which] = true; };
-window.onkeyup = function(e){ keys[e.which] = undefined; };
+window.onkeydown = function(e){
+	keys[e.which] = true;
+	$('.you-are-here').fadeOut(300, function(){ $(this).remove(); })
+};
+window.onkeyup = function(e){
+	keys[e.which] = undefined;
+};
 window.onkeypress = function(e) {
 	if (e.which == 32 && ready >= 3) units.spawn();
 }
@@ -438,5 +472,5 @@ window.onkeypress = function(e) {
 var loading = setInterval(function(){
 	if (ready < 3) return ;
 	clearInterval(loading);
-	log('Для начала игры нажмите пробел', 'red');
+	log('<strong>Для начала игры нажмите пробел</strong>');
 }, 10);

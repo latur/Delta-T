@@ -3,7 +3,7 @@ cd /home/mathilde/node
 npm install express
 npm install socket.io
 node tanks/server.js
-*/ 
+*/
 
 var PORT = 8913;
 
@@ -27,10 +27,9 @@ io.on('connection', function (socket) {
 
 	var ip = socket.handshake.address;
 	if (ip.substr(0, 7) == '::ffff:') ip = ip.substr(7);
-	console.log('> New connection. cn:%s, id:%s %s', cn, id, ip);
-	console.log(socket.request.connection._peername)
+	// console.log('> New connection. cn:%s, id:%s %s', cn, id, ip);
 
-	players[cn] = { ping:0, hist:[], ip : ip, dead : false };
+	players[cn] = { ping:0, hist:[], ip : ip, dead : false, kills: 0, deads: 0 };
 
 	// При получении положения разослать его тут же всем
 	// Присобачив CN автора сообщения
@@ -46,7 +45,7 @@ io.on('connection', function (socket) {
 	// Ушёл кто-то
 	socket.on('disconnect', function () {
 		delete players[cn];
-		console.log('> Disconnect. cn:%s, id:%s', cn, id);
+		// console.log('> Disconnect. cn:%s, id:%s', cn, id);
 		socket.broadcast.emit('remove', cn);
 		if (Object.keys(players).length == 0) cnc = 0;
 	});
@@ -69,18 +68,21 @@ io.on('connection', function (socket) {
 			for (var i in info[2]) {
 				if (vrification(owner_treshold, info[2][i], to)) {
 					var pkn = parseInt(info[2][i][0]);
-					kills_true.push(pkn)
+					kills_true.push(pkn);
 				}
 			}
 			
 			// Обновить статус
 			for (var i in kills_true) {
 				if (!players[kills_true[i]]) continue ;
-				players[kills_true[i]].dead = true;
 				setTimeout(function(){
+					if (!players[kills_true[i]]) return ;
 					players[kills_true[i]].dead = false;
 					players[kills_true[i]].hist = [];
 				}, 5100);
+				players[kills_true[i]].deads += 1;
+				players[kills_true[i]].dead = true;
+				if (kills_true[i] != cn) players[cn].kills += 1;
 			} 
 
 			socket.broadcast.emit('shot', [cn, from, to, kills_true]);
@@ -93,7 +95,7 @@ io.on('connection', function (socket) {
 
 	// Время от времени мониторим пинг клиентов
 	var tx = now();
-	setInterval(function(){ tx = now(), socket.emit('echo', [cn, players]); }, 3455);
+	setInterval(function(){ tx = now(), socket.emit('echo', [cn, players]); }, 2455);
 	socket.emit('echo', [cn, players]);
 
 	socket.on('echo', function (){
@@ -105,13 +107,6 @@ io.on('connection', function (socket) {
 
 	return ;
 });
-
-setInterval(function(){
-	console.log('Players:');
-	for (cn in players) {
-		console.log('CN: %s, Ping: %s', cn, players[cn].ping);
-	}
-}, 5000);
 
 
 // -------------------------------------------------------------------------- //
@@ -125,8 +120,6 @@ function vrification(time_treshold, info, to) {
 	}
 	return false;
 }
-
-
 function random_int(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -137,5 +130,3 @@ function dist(A, B){
 	if (!A || !B) return Infinity;
 	return Math.sqrt( Math.pow(A.x - B.x, 2) + Math.pow(A.y - B.y, 2) );
 }
-
-

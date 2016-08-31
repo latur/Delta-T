@@ -8,7 +8,13 @@
 	<link href="css/style.css" rel="stylesheet">
 </head>
 <body class="full">
-	<div id="scores" class="full hidden">
+	<div id="scores" class="full hidden animate">
+		<table>
+			<thead>
+				<tr class="head"><th>ID</th><th>Поражений</th><th>Побед</th><th>IP</th><th>Ping</th></tr>
+			</thead>
+			<tbody></tbody>
+		</table>
 	</div>
 	<div id="notes">
 		<div class="l1">
@@ -23,7 +29,7 @@
 		</div>
 		<div class="key space">Sapce<div class="note c b">Огонь</div></div>
 	</div>
-	<div id="screen" class="full"></div>
+	<div id="screen"></div>
 	<div id="xmap"></div>
 </body>
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>

@@ -6,7 +6,7 @@
 
 body {
     font: 13px 'Segoe UI','DejaVu Sans',Helvetica,'Trebuchet MS',Arial,sans-serif;
-    background: #333;
+    background: #322144;
     font-weight: 100;
 }
 canvas {
@@ -27,6 +27,12 @@ canvas {
 }
 .hidden {
     display: none
+}
+.animate {
+	-webkit-transition:all 0.55s ease-out;
+	-moz-transition-:all 0.55s ease-out;
+	-o-transition:all 0.55s ease-out;
+	transition:all 0.55s ease-out
 }
 
 #notes {
@@ -118,14 +124,44 @@ canvas {
 }
 
 #scores {
-	z-index: 280;
-	background: rgba(0,0,0,0.8);
+	padding: 120px;
+	overflow: auto;
+	z-index: 250;
+	background: rgba(0,0,0,0.5);
+	opacity: 1;
 }
 #scores.hidden {
+	display: block;
 	opacity: 0;
+}
+#scores table {
+	color: #fff;
+	width: 300px;
+	margin: auto;
+    border-collapse: collapse;
+}
+#scores thead {
+	text-align: left;
+	font-weight: 400;
+}
+#scores thead tr {
+    border-collapse: separate;
+}
+#scores thead th {
+	padding: 0 0 5px 5px;
+}
+#scores tbody {
+    border-top: 1px dashed #eee;
+}
+#scores tbody td {
+	padding: 5px 5px 0 5px;
+	border-collapse: collapse;
 }
 
 #screen {
+	left: 0; 
+	top: 0;
+	position: absolute;
 	z-index: 300;
     color: #eee;
     font-weight: 100;
@@ -133,10 +169,7 @@ canvas {
     line-height: 18px;
 	text-shadow: 0 1px 3px #000;
 }
-.pre {
-	color: #a2ff90;
-}
-.red {
+#screen strong {
 	color: #f00;
 }
 #xmap {
@@ -194,4 +227,24 @@ canvas {
     height: 2px;
     background: url('../img/noise.gif');
     opacity: 0.8;
+}
+.you-are-here {
+	position: absolute;
+	z-index: 120;
+    background: url('../img/you_are_here.png');
+    background-size: 90px 112px;
+    margin-left: -28px;
+    margin-top: -88px;
+	width: 90px;
+	height: 112px;
+}
+.dead-place {
+	position: absolute;
+	z-index: 12;
+    background: url('../img/dead_place.png');
+    background-size: 90px 90px;
+    margin-left: -45px;
+    margin-top: -45px;
+	width: 90px;
+	height: 90px;
 }

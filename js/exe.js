@@ -164,10 +164,10 @@ var map = (function(cfg, e){
 })(map_config, $('#xmap'));
 
 // -------------------------------------------------------------------------- //
-var units = (function(cfg, e){
-	var me = add(-999,-999), cn = 0;
-	var owners = {}, players = {}, fire = 0, dead = 0;
-	var smoke = {};
+var game = (function(cfg, e){
+	var me = add(-999,-999), cn = 0, stepsx = 0;
+	var owners = {}, players = {}, objects = {};
+	var smoke = {}, fire = 0, dead = 0;
 
 	// Медиаконтент: Спрайты взрывов
 	loader([cfg.sprite.fire[0], cfg.sprite.dead[0]], function(){
@@ -182,7 +182,7 @@ var units = (function(cfg, e){
 			players = e[1] || {};
 			var table = '';
 			for (var id in players) {
-				if (!owners[id]) console.log('!');
+				if (!owners[id] && id != cn) console.log('!');
 				table += '<tr class="' + ( players[id].dead ? 'dead' : 'live') + '"><td>';
 				table += ['#' + id, players[id].deads, players[id].kills, players[id].ip, players[id].ping].join('</td><td>');
 				table += '</td></tr>';
@@ -231,11 +231,11 @@ var units = (function(cfg, e){
 			.attr('height', map_config.size[1])
 			.appendTo(e);
 		if (isme) cv.addClass('my-smoke');
-		var ex = { 'live' : 20, 'points': [], 'wries': [], 'cv' : cv, 'ctx' : cv[0].getContext('2d'), 'pict' : new Image() };
+		var ex = { 'live' : 35, 'points': [], 'wries': [], 'cv' : cv, 'ctx' : cv[0].getContext('2d'), 'pict' : new Image() };
 		ex.pict.src = './img/sm.png';
-		for (var i = 0; i < 2 * Math.PI; i += 0.08){
-			var go = { x: 10 * Math.cos(i), y: 10 * Math.sin(i) };
-			var x = Matter.Bodies.circle(pt.x + 2 * go.x, pt.y + 2 * go.y, 7);
+		for (var i = 0; i < 2 * Math.PI; i += 0.07){
+			var go = { x: 7 * Math.cos(i), y: 7 * Math.sin(i) };
+			var x = Matter.Bodies.circle(pt.x + 2 * go.x, pt.y + 2 * go.y, 2);
 			Matter.Body.setVelocity(x, go);
 			ex.points.push(x);
 		}
@@ -363,6 +363,16 @@ var units = (function(cfg, e){
 			speed  : [0, 0]
 		}
 	}
+	
+	// Подобран объект
+	function getting(obj){
+		if (obj.type && obj.type == 'smoke') {
+			log('Подобрана дымовая шашка!');
+			log('Используйте её чтобы запутать следы и скрыться');
+			log('<strong>Нажмите на «O» и ваша окресность покроется дымом, в которм можете видеть только вы</strong>');
+			me[obj.type] = true;
+		}
+	}
 
 	// Шаг анимации. Срабатывает перед отрисовкой карты
 	function step(){
@@ -372,6 +382,38 @@ var units = (function(cfg, e){
 			owners[cn].set(owners[cn].coda[0]);
 			owners[cn].coda = owners[cn].coda.splice(1);
 		}
+
+		// - Воспроизведение дымовушки
+		for (var sk in smoke) {
+			smoke[sk].live--;
+			if (smoke[sk].live%2) continue ;
+			if (smoke[sk].live <= - 800) {
+				smoke[sk].cv.fadeOut(20 * 1000, function(){ $(this).remove(); });
+				delete smoke[sk];
+				return ;
+			}
+			if (smoke[sk].live > 0) {
+				var d = (20 - smoke[sk].live)/2;
+				smoke[sk].points.map(function(box){
+					Matter.Body.setVelocity(box, {
+						x: box.velocity.x + d * Math.random() - d/2, 
+						y: box.velocity.y + d * Math.random() - d/2
+					});
+					smoke[sk].wries.push([box.position.x, box.position.y]);
+				});
+			}
+			if (smoke[sk].live == 0) {
+				Matter.World.remove(engine.world, smoke[sk].points);
+			}
+			smoke[sk].wries.map(function(px, i){
+				var r = Math.random();
+				if (r * 500 + smoke[sk].live < 0) return ;
+				r = r * r * 50;
+				var f = Math.random() * Math.PI * 2;
+				smoke[sk].ctx.drawImage(smoke[sk].pict, px[0] + Math.cos(f) * r - 25, px[1] + Math.sin(f) * r - 25);
+			});
+		}
+
 		if (dead !== false) return me.coda = [];
 
 		// - Сброс скорости
@@ -403,36 +445,11 @@ var units = (function(cfg, e){
 		if (keys[32] && fire == 0) make_shot();
 		
 		// - Дымовушка! «O/Щ»
-		if (keys[79]) {
+		if (keys[79] && me['smoke']) {
 			make_smoke(me.box.position, 'is me');
+			socket.emit('smoke', me.box.position);
+			me['smoke'] = false;
 			keys[79] = false;
-		}
-		
-		// - Воспроизведение дымовушки
-		for (var sk in smoke) {
-			smoke[sk].live--;
-			if (smoke[sk].live%2) continue ;
-			if (smoke[sk].live <= -400) {
-				smoke[sk].cv.fadeOut(60 * 1000, function(){ $(this).remove(); });
-				delete smoke[sk];
-				return ;
-			}
-			if (smoke[sk].live == 0) {
-				Matter.World.remove(engine.world, smoke[sk].points);
-			}
-			smoke[sk].points.map(function(box){
-				Matter.Body.setVelocity(box, {
-					x: box.velocity.x + 1 * Math.random() - 0.5, 
-					y: box.velocity.y + 1 * Math.random() - 0.5
-				});
-				smoke[sk].wries.push([box.position.x, box.position.y]);
-			});
-			smoke[sk].wries.map(function(px, i){
-				var r = Math.random(), r = r * r * 60;
-				if (r * 2 + smoke[sk].live < 0) return ;
-				var f = Math.random() * Math.PI * 2;
-				smoke[sk].ctx.drawImage(smoke[sk].pict, px[0] + Math.cos(f) * r - 25, px[1] + Math.sin(f) * r - 25);
-			});
 		}
 		
 		// Запись моих действий
@@ -443,9 +460,23 @@ var units = (function(cfg, e){
 		nx.push(parseInt(((me.tower.angle) % 360 + 360) % 360));
 		// В стрек
 		me.state.push(nx.join(','));
-
+		
 		// Отрисовка карты и миникарты
 		map.position(me.box.position);
+
+		stepsx = (stepsx + 1) % 10;
+		if (stepsx != 0) return ;
+
+		// Проверка, не напоролся ли я на что-нибудь?
+		for (var i in objects){
+			console.log('SOUND: getting');
+			if (dist(objects[i].place, me.box.position) <= objects[i].radius) {
+				// SOUND
+				objects[i].element.fadeOut(300, function(){ $(this).remove(); });
+				socket.emit('getting', [i, me.box.position]);
+				delete objects[i];
+			}
+		}
 	}
 
 	// Пробел: переродиться
@@ -494,21 +525,44 @@ var units = (function(cfg, e){
 		me.state = [];
 	}, 200);
 
-	return { 'step' : step, 'spawn' : spawn, 'update' : update, 'leave' : leave, 'shot' : shot, 'echo' : echo }
+	// Информация по игрокам
+	socket.on('echo', echo);
+	// Прилетела информация про одного пользователя
+	socket.on('user', update);
+	// Кто-то выстрелил
+	socket.on('shot', shot);
+	// Кто-то жахнул дымовую бомбу
+	socket.on('smoke', make_smoke);
+	// Кто-то покинул нас
+	socket.on('remove', leave);
+	// Синхронизация объектов
+	socket.on('objects', function(o){
+		for (var i in objects) {
+			if (!o[i]) {
+				objects[i].element.fadeOut(2 * 1000, function(){ $(this).remove(); });
+				delete objects[i];
+			}
+		}
+		for (var i in o) {
+			if (!objects[i]) {
+				objects[i] = o[i];
+				objects[i].element = $('<div class="objects" />').addClass(o[i].type)
+					.css({ top: o[i].place.y, left: o[i].place.x })
+					.appendTo(e);
+			}
+		}
+	});
+	// Пришло подтверждение: я напоролся
+	socket.on('getting', getting);
+
+	
+	Matter.Events.on(render, 'afterRender', step);
+
+	return { 'spawn' : spawn }
 })(unit_config, $('#xmap'));
 
-// -------------------------------------------------------------------------- //
-// Информация по игрокам
-socket.on('echo', units.echo);
-// Прилетела информация про одного пользователя
-socket.on('user', units.update);
-// Кто-то выстрелил
-socket.on('shot', units.shot);
-// Кто-то покинул нас
-socket.on('remove', units.leave);
 
 // -------------------------------------------------------------------------- //
-Matter.Events.on(render, 'afterRender', units.step);
 Matter.Engine.run(engine);
 Matter.Render.run(render);
 
@@ -521,8 +575,8 @@ window.onkeyup = function(e){
 	keys[e.which] = undefined;
 };
 window.onkeypress = function(e) {
-	console.log(e.which);
-	if (e.which == 32 && ready >= 3) units.spawn();
+	//console.log(e.which);
+	if (e.which == 32 && ready >= 3) game.spawn();
 	if (e.which) e.preventDefault();
 	return false;
 }

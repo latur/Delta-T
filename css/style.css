@@ -190,7 +190,7 @@ canvas {
 
 .tower {
     position: absolute;
-    z-index: 20;
+    z-index: 40;
     width: 64px;
     height: 22px;
     margin-left: -32px;
@@ -199,7 +199,7 @@ canvas {
 }
 .body {
     position: absolute;
-    z-index: 15;
+    z-index: 25;
     width: 40px;
     height: 24px;
     margin-left: -20px;
@@ -209,7 +209,7 @@ canvas {
 	position: absolute;
     width: 40px;
     height: 24px;
-    z-index: 15;
+    z-index: 25;
 	background-size: 40px 24px;
 }
 .body::before {
@@ -237,17 +237,7 @@ canvas {
 	z-index: 110;
 }
 .my-smoke {
-	opacity: 0.5;
-	opacity: 1;
-}
-.sm {
-	position: absolute;
-	z-index: 110;
-	width: 40px;
-	height: 40px;
-	margin: -20px 0 0 -20px;
-    background: url('../img/sm.png');
-    background-size: 40px 40px;
+	opacity: 0.6;
 }
 .you-are-here {
 	position: absolute;
@@ -261,11 +251,67 @@ canvas {
 }
 .dead-place {
 	position: absolute;
-	z-index: 12;
+	z-index: 10;
     background: url('../img/dead_place.png');
     background-size: 90px 90px;
     margin-left: -45px;
     margin-top: -45px;
 	width: 90px;
 	height: 90px;
+}
+.objects {
+	position: absolute;
+	z-index: 12;
+	width: 40px;
+	height: 40px;
+	margin: -20px 0 0 -20px;
+    background-size: 40px 40px;
+}
+.objects.smoke {
+    background-image: url('../img/smoke.png');
+}
+.objects.smoke:before {
+	content: '';
+	position: absolute;
+	width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px dashed #67d400;
+    	
+    -webkit-animation-name: spin;
+    -webkit-animation-duration: 9000ms;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: linear;
+    -moz-animation-name: spin;
+    -moz-animation-duration: 9000ms;
+    -moz-animation-iteration-count: infinite;
+    -moz-animation-timing-function: linear;
+    -ms-animation-name: spin;
+    -ms-animation-duration: 9000ms;
+    -ms-animation-iteration-count: infinite;
+    -ms-animation-timing-function: linear;
+    animation-name: spin;
+    animation-duration: 9000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+@-ms-keyframes spin {
+    from { -ms-transform: rotate(0deg); }
+    to { -ms-transform: rotate(360deg); }
+}
+@-moz-keyframes spin {
+    from { -moz-transform: rotate(0deg); }
+    to { -moz-transform: rotate(360deg); }
+}
+@-webkit-keyframes spin {
+    from { -webkit-transform: rotate(0deg); }
+    to { -webkit-transform: rotate(360deg); }
+}
+@keyframes spin {
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
 }

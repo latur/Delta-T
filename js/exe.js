@@ -167,6 +167,7 @@ var map = (function(cfg, e){
 var units = (function(cfg, e){
 	var me = add(-999,-999), cn = 0;
 	var owners = {}, players = {}, fire = 0, dead = 0;
+	var smoke = {};
 
 	// Медиаконтент: Спрайты взрывов
 	loader([cfg.sprite.fire[0], cfg.sprite.dead[0]], function(){
@@ -220,7 +221,28 @@ var units = (function(cfg, e){
 		fire = 6;
 		draw_shot(from, to);
 	}
-
+	
+	// Дымовушка!
+	function make_smoke(pt, isme){
+		var cv = $('<canvas />')
+			.addClass('smcanvas')
+			.addClass('full')
+			.attr('width',  map_config.size[0])
+			.attr('height', map_config.size[1])
+			.appendTo(e);
+		if (isme) cv.addClass('my-smoke');
+		var ex = { 'live' : 20, 'points': [], 'wries': [], 'cv' : cv, 'ctx' : cv[0].getContext('2d'), 'pict' : new Image() };
+		ex.pict.src = './img/sm.png';
+		for (var i = 0; i < 2 * Math.PI; i += 0.08){
+			var go = { x: 10 * Math.cos(i), y: 10 * Math.sin(i) };
+			var x = Matter.Bodies.circle(pt.x + 2 * go.x, pt.y + 2 * go.y, 7);
+			Matter.Body.setVelocity(x, go);
+			ex.points.push(x);
+		}
+		Matter.World.add(engine.world, ex.points);
+		smoke[Math.random()] = ex;
+	}
+	
 	// Пришла достоверная информация про выстрел
 	function shot(info){
 		var by = info[0], from = info[1], to = info[2];
@@ -380,6 +402,39 @@ var units = (function(cfg, e){
 		// - Выстрел
 		if (keys[32] && fire == 0) make_shot();
 		
+		// - Дымовушка! «O/Щ»
+		if (keys[79]) {
+			make_smoke(me.box.position, 'is me');
+			keys[79] = false;
+		}
+		
+		// - Воспроизведение дымовушки
+		for (var sk in smoke) {
+			smoke[sk].live--;
+			if (smoke[sk].live%2) continue ;
+			if (smoke[sk].live <= -400) {
+				smoke[sk].cv.fadeOut(60 * 1000, function(){ $(this).remove(); });
+				delete smoke[sk];
+				return ;
+			}
+			if (smoke[sk].live == 0) {
+				Matter.World.remove(engine.world, smoke[sk].points);
+			}
+			smoke[sk].points.map(function(box){
+				Matter.Body.setVelocity(box, {
+					x: box.velocity.x + 1 * Math.random() - 0.5, 
+					y: box.velocity.y + 1 * Math.random() - 0.5
+				});
+				smoke[sk].wries.push([box.position.x, box.position.y]);
+			});
+			smoke[sk].wries.map(function(px, i){
+				var r = Math.random(), r = r * r * 60;
+				if (r * 2 + smoke[sk].live < 0) return ;
+				var f = Math.random() * Math.PI * 2;
+				smoke[sk].ctx.drawImage(smoke[sk].pict, px[0] + Math.cos(f) * r - 25, px[1] + Math.sin(f) * r - 25);
+			});
+		}
+		
 		// Запись моих действий
 		var nx = [parseInt(me.box.position.x), parseInt(me.box.position.y)];
 		// Угол корпуса 3
@@ -466,6 +521,7 @@ window.onkeyup = function(e){
 	keys[e.which] = undefined;
 };
 window.onkeypress = function(e) {
+	console.log(e.which);
 	if (e.which == 32 && ready >= 3) units.spawn();
 	if (e.which) e.preventDefault();
 	return false;

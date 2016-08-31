@@ -163,7 +163,6 @@ canvas {
 	border-collapse: collapse;
 }
 
-
 #screen {
 	left: 0; 
 	top: 0;
@@ -233,6 +232,22 @@ canvas {
     height: 2px;
     background: url('../img/noise.gif');
     opacity: 0.8;
+}
+.smcanvas {
+	z-index: 110;
+}
+.my-smoke {
+	opacity: 0.5;
+	opacity: 1;
+}
+.sm {
+	position: absolute;
+	z-index: 110;
+	width: 40px;
+	height: 40px;
+	margin: -20px 0 0 -20px;
+    background: url('../img/sm.png');
+    background-size: 40px 40px;
 }
 .you-are-here {
 	position: absolute;

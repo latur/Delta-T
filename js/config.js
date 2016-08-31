@@ -55,3 +55,12 @@ var map_config = {
 		[1239, 509, 56]
 	]
 };
+
+var sounds = {
+	'run' : new Audio('./sounds/run.wav'),
+	'get' : new Audio('./sounds/get.wav'),
+	'smk' : new Audio('./sounds/smk.wav'),
+	'fre' : new Audio('./sounds/fre.wav'),
+	'bom' : new Audio('./sounds/bom.wav')
+};
+

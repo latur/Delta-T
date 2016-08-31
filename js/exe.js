@@ -206,6 +206,7 @@ var game = (function(cfg, e){
 	function draw_shot(from, to){
 		e.append(line(from, to));
 		e.append(sprite(cfg.sprite.fire, to));
+		sounds.fre.play();
 	}
 
 	// Рассчёт и отправка взрыва
@@ -241,6 +242,7 @@ var game = (function(cfg, e){
 		}
 		Matter.World.add(engine.world, ex.points);
 		smoke[Math.random()] = ex;
+		sounds.smk.play();
 	}
 	
 	// Пришла достоверная информация про выстрел
@@ -263,12 +265,14 @@ var game = (function(cfg, e){
 			me.kill();
 			dead = 5 * 5, me.speed = [0, 0];
 			dead_unit = me.box.position;
-			$('#scores').removeClass('hidden')
+			sounds.run.pause();
+			$('#scores').removeClass('hidden');
 			if (by == cn) {
 				log('Вы подорвали себя. Не стоит стрелять в упор');
 			} else {
 				log('Вас убил #' + by);
 			}
+			sounds.bom.play();
 		});
 		// Не я стрелял : отрисовка выстрела
 		// Важно куда отрисовывать выстрел
@@ -424,16 +428,20 @@ var game = (function(cfg, e){
 		var st = Math.sin(me.box.angle);
 
 		// - Движение корпуса
-		if (keys[38] || keys[87]) me.speed[0] += 0.3 * ct, me.speed[1] += 0.3 * st;
-		if (keys[40] || keys[83]) me.speed[0] -= 0.2 * ct, me.speed[1] -= 0.2 * st;
+		if (keys[38] || keys[87]) me.speed[0] += 0.3 * ct, me.speed[1] += 0.3 * st, sounds.run.play();
+		if (keys[40] || keys[83]) me.speed[0] -= 0.2 * ct, me.speed[1] -= 0.2 * st, sounds.run.play();
 		me.speed[0] = Math.min(me.speed[0], 6);
 		me.speed[1] = Math.min(me.speed[1], 6);
 		Matter.Body.setVelocity(me.box, { x: me.speed[0], y: me.speed[1] });
 		
+		var vol = (Math.abs(me.speed[1]) + Math.abs(me.speed[0]))/4;
+		
 		// - Поворот корпуса
 		Matter.Body.setAngularVelocity(me.box, 0);
-		if (keys[37] || keys[65]) Matter.Body.setAngularVelocity(me.box, -0.04);
-		if (keys[39] || keys[68]) Matter.Body.setAngularVelocity(me.box,  0.04);
+		if (keys[37] || keys[65]) Matter.Body.setAngularVelocity(me.box, -0.04), vol += 0.8;
+		if (keys[39] || keys[68]) Matter.Body.setAngularVelocity(me.box,  0.04), vol += 0.8;
+
+		sounds.run.volume = Math.min(vol, 1) * 0.5;
 		
 		// - Поворот башни
 		if (keys[81]) me.tower.angle -= 2;
@@ -469,9 +477,9 @@ var game = (function(cfg, e){
 
 		// Проверка, не напоролся ли я на что-нибудь?
 		for (var i in objects){
-			console.log('SOUND: getting');
 			if (dist(objects[i].place, me.box.position) <= objects[i].radius) {
-				// SOUND
+				sounds.get.volume = 0.3;
+				sounds.get.play();
 				objects[i].element.fadeOut(300, function(){ $(this).remove(); });
 				socket.emit('getting', [i, me.box.position]);
 				delete objects[i];

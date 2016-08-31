@@ -181,8 +181,8 @@ var units = (function(cfg, e){
 			players = e[1] || {};
 			var table = '';
 			for (var id in players) {
-				console.log(players[id]);
-				table += '<tr><td>';
+				if (!owners[id]) console.log('!');
+				table += '<tr class="' + ( players[id].dead ? 'dead' : 'live') + '"><td>';
 				table += ['#' + id, players[id].deads, players[id].kills, players[id].ip, players[id].ping].join('</td><td>');
 				table += '</td></tr>';
 			}
@@ -467,6 +467,8 @@ window.onkeyup = function(e){
 };
 window.onkeypress = function(e) {
 	if (e.which == 32 && ready >= 3) units.spawn();
+	if (e.which) e.preventDefault();
+	return false;
 }
 
 var loading = setInterval(function(){

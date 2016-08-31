@@ -157,6 +157,12 @@ canvas {
 	padding: 5px 5px 0 5px;
 	border-collapse: collapse;
 }
+#scores tbody tr.dead {
+	color: #aaa;
+	padding: 5px 5px 0 5px;
+	border-collapse: collapse;
+}
+
 
 #screen {
 	left: 0; 

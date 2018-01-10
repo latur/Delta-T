@@ -1,16 +1,20 @@
-/*
-npm install express
-npm install socket.io
-node server.js
-*/ 
-
 var PORT = 8913;
 
+var fs = require( 'fs' );
 var app = require('express')();
-var server = require('http').Server(app);
-var io = require('socket.io')(server);
+var https = require('https');
+
+var server = https.createServer({
+    key:  fs.readFileSync('cert.key'),
+    cert: fs.readFileSync('cert.crt'),
+    ca:   fs.readFileSync('cert.crt'),
+    requestCert: false,
+    rejectUnauthorized: false
+}, app);
 
 server.listen(PORT);
+
+var io = require('socket.io')(server);
 
 // -------------------------------------------------------------------------- //
 var players = {}, cnc = 0;

@@ -3,23 +3,23 @@
 var unit_config = {
 	'skin' : [
 		{
-			'body'  : './img/model-w.png',
-			'tower' : './img/model-w-tower.png',
+			'body'  : '../client/img/model-w.png',
+			'tower' : '../client/img/model-w-tower.png',
 		}, {
-			'body'  : './img/model-b.png',
-			'tower' : './img/model-b-tower.png',
+			'body'  : '../client/img/model-b.png',
+			'tower' : '../client/img/model-b-tower.png',
 		}
 	],
 	'sprite' : {
-		'fire' : ['./img/explosion_fire.png', 64, 40],
-		'dead' : ['./img/explosion_tank.png', 128, 48]
+		'fire' : ['../client/img/explosion_fire.png', 64, 40],
+		'dead' : ['../client/img/explosion_tank.png', 128, 48]
 	}
 };
 
 var map_config = {
 	'size'   : [1600, 900],
-	'ground' : './img/map.BG.jpg',
-	'top'    : './img/map.top.png',
+	'ground' : '../client/img/map.BG.jpg',
+	'top'    : '../client/img/map.top.png',
 	'spawn'  : [
 			{x: 259, y: 610},
 			{x: 445, y: 720},
@@ -57,10 +57,10 @@ var map_config = {
 };
 
 var sounds = {
-	'run' : new Audio('./sounds/run.wav'),
-	'get' : new Audio('./sounds/get.wav'),
-	'smk' : new Audio('./sounds/smk.wav'),
-	'fre' : new Audio('./sounds/fre.wav'),
-	'bom' : new Audio('./sounds/bom.wav')
+	'run' : new Audio('../client/sounds/run.wav'),
+	'get' : new Audio('../client/sounds/get.wav'),
+	'smk' : new Audio('../client/sounds/smk.wav'),
+	'fre' : new Audio('../client/sounds/fre.wav'),
+	'bom' : new Audio('../client/sounds/bom.wav')
 };
 

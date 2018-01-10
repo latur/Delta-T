@@ -1,8 +1,8 @@
-# dT
+# Delta-T.ml
 
-[Delta-T.ml](http://delta-t.ml)
+[delta-t.ml](https://delta-t.ml)
 
-> Браузерная многопользовательская игра на JS, на базе [Socket.IO](http://socket.io/) и [Matter.js](https://github.com/liabru/matter-js)
+Браузерная многопользовательская игра на JS, на базе веб сокетов [socket.io](http://socket.io/) и 2d движка на JS [Matter.js](https://github.com/liabru/matter-js)
 
-![dT.Alt](https://hard.mazepa.us/2016/8/31/1/main5jav657c6f5cf7d4cd.1520x690.png)
-![dT.Alt](https://hard.mazepa.us/2016/8/31/1/main6847j57c6f82c0024a.900x455.png)
+
+![dT.Alt](https://hard.mazepa.us/2018/1/11/1/mainfqg04clqn2.2322x1618.png)
